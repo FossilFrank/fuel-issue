@@ -40,12 +40,6 @@ abi Exchange {
     ////////////////////
     /// Get information on the liquidity pool.
     #[storage(read)]fn get_pool_info() -> PoolInfo;
-    /// Get information on the liquidity pool.
-    #[storage(read)]fn get_add_liquidity_token_amount(token_0_amount: u64) -> u64;
-    /// Get the minimum amount of coins that will be received for a swap_with_minimum.
-    #[storage(read)]fn get_swap_with_minimum(amount: u64) -> PreviewInfo;
-    /// Get required amount of coins for a swap_with_maximum.
-    #[storage(read)]fn get_swap_with_maximum(amount: u64) -> PreviewInfo;
     /// Get the two tokens held in the pool
     #[storage(read)]fn get_tokens() -> (b256, b256);
     ////////////////////
