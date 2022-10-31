@@ -1,7 +1,6 @@
 [[package]]
 name = 'core'
-source = 'path+from-root-815C32BB386C1563'
-dependencies = []
+source = 'path+from-root-4F1DF21A08902E48'
 
 [[package]]
 name = 'exchange_abi'
@@ -24,5 +23,5 @@ dependencies = ['std']
 
 [[package]]
 name = 'std'
-source = 'git+https://github.com/fuellabs/sway?tag=v0.25.2#dfa6224932a97c514b707dcfc300715b2a0895dc'
+source = 'git+https://github.com/fuellabs/sway?tag=v0.29.0#dc8e5f6b84741a3a690ba25b473f8b1e01e31103'
 dependencies = ['core']

@@ -1,17 +1,11 @@
 contract;
 
 use std::{
-    address::*,
-    assert::assert,
     block::timestamp,
     chain::auth::*,
     context::{*, call_frames::*},
-    contract_id::ContractId,
     hash::*,
-    identity::Identity,
     math::*,
-    result::*,
-    revert::revert,
     storage::*,
     token::*,
     u128::U128,
@@ -32,24 +26,6 @@ enum Error {
     Invariant: (),
     InsufficentLiquidityMinted: (),
     InsufficentLiquidityBurned: (),
-}
-
-impl Root for U128 {
-    // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
-    fn sqrt(self) -> Self {
-        let mut z = ~U128::from(0, 0);
-        if (self > ~U128::from(0, 3)) {
-            z = self;
-            let mut x = self / ~U128::from(0, 2) + ~U128::from(0, 1);
-            while (x < z) {
-                z = x;
-                x = (self / x + x) / ~U128::from(0, 2);
-            }
-        } else if (self != ~U128::from(0, 0)) {
-            z = ~U128::from(0, 1);
-        }
-        z
-    }
 }
 
 ////////////////////////////////////////
@@ -80,8 +56,8 @@ storage {
     twap_buffer: StorageMap<u64, Observation> = StorageMap {},
     observation: Observation = Observation {
         timestamp: 1,
-        price0CumulativeLast: ~U128::from(0, 0),
-        price1CumulativeLast: ~U128::from(0, 0),
+        price0CumulativeLast: U128::from(0, 0),
+        price1CumulativeLast: U128::from(0, 0),
     },
 }
 
@@ -93,9 +69,9 @@ storage {
     let (token0, token1) = get_tokens();
     let mut amount = 0;
     if (asset_id == token0) {
-        amount = this_balance(~ContractId::from(token0)) - token_0_reserve;
+        amount = this_balance(ContractId::from(token0)) - token_0_reserve;
     } else if (asset_id == token1) {
-        amount = this_balance(~ContractId::from(token1)) - token_1_reserve;
+        amount = this_balance(ContractId::from(token1)) - token_1_reserve;
     } else {
         revert(0);
     }
@@ -112,8 +88,8 @@ storage {
     //     next_observation_slot = storage.twap_buffer_current_element;
     //     last_observation = Observation {
     //         timestamp: timestamp(),
-    //         price0CumulativeLast: ~U128::from(0, 0),
-    //         price1CumulativeLast: ~U128::from(0, 0),
+    //         price0CumulativeLast: U128::from(0, 0),
+    //         price1CumulativeLast: U128::from(0, 0),
         // };
     }
 
@@ -121,8 +97,8 @@ storage {
     // if (timeElapsed != 0 && prev_reserve0 != 0 && prev_reserve1 != 0) {
     //     storage.twap_buffer.insert(next_observation_slot, Observation {
     //         timestamp: timestamp(),
-    //         price0CumulativeLast: last_observation.price0CumulativeLast + (~U128::from(0, prev_reserve1) * ~U128::from(0, timeElapsed) / ~U128::from(0, prev_reserve0)),
-    //         price1CumulativeLast: last_observation.price1CumulativeLast + (~U128::from(0, prev_reserve0) * ~U128::from(0, timeElapsed) / ~U128::from(0, prev_reserve1)),
+    //         price0CumulativeLast: last_observation.price0CumulativeLast + (U128::from(0, prev_reserve1) * U128::from(0, timeElapsed) / U128::from(0, prev_reserve0)),
+    //         price1CumulativeLast: last_observation.price1CumulativeLast + (U128::from(0, prev_reserve0) * U128::from(0, timeElapsed) / U128::from(0, prev_reserve1)),
     //     });
     // }
 
@@ -165,8 +141,8 @@ impl Exchange for Contract {
         let token_0_reserve = storage.token0_reserve;
         let token_1_reserve = storage.token1_reserve;
 
-        let current_token_0_amount = this_balance(~ContractId::from(token0)) - token_0_reserve;
-        let current_token_1_amount = this_balance(~ContractId::from(token1)) - token_1_reserve;
+        let current_token_0_amount = this_balance(ContractId::from(token0)) - token_0_reserve;
+        let current_token_1_amount = this_balance(ContractId::from(token1)) - token_1_reserve;
 
         assert(current_token_0_amount > 0);
         assert(current_token_1_amount > 0);
@@ -193,13 +169,13 @@ impl Exchange for Contract {
             storage.twap_next_buffer_size = 1;
             // storage.twap_buffer.insert(0, Observation {
             //     timestamp: 1,
-            //     price0CumulativeLast: ~U128::max(),
-            //     price1CumulativeLast: ~U128::max(),
+            //     price0CumulativeLast: U128::max(),
+            //     price1CumulativeLast: U128::max(),
             // });
             // storage.twap_buffer.insert(0, 1);
             storage.twap_buffer.get(0);
 
-            let initial_liquidity = (~U128::from(0, current_token_0_amount) * ~U128::from(0, current_token_1_amount))
+            let initial_liquidity = (U128::from(0, current_token_0_amount) * U128::from(0, current_token_1_amount))
                 .sqrt()
                 .as_u64()
                 .unwrap() - MINIMUM_LIQUIDITY;
@@ -234,8 +210,8 @@ impl Exchange for Contract {
         let token_0_reserve = storage.token0_reserve;
         let token_1_reserve = storage.token1_reserve;
         let total_liquidity = storage.lp_token_supply;
-        let current_token_0_amount = this_balance(~ContractId::from(token0));
-        let current_token_1_amount = this_balance(~ContractId::from(token1));
+        let current_token_0_amount = this_balance(ContractId::from(token0));
+        let current_token_1_amount = this_balance(ContractId::from(token1));
 
         let amount0 = lp_tokens * current_token_0_amount / total_liquidity; // using balances ensures pro-rata distribution
         let amount1 = lp_tokens * current_token_1_amount / total_liquidity; // using balances ensures pro-rata distribution
@@ -244,8 +220,8 @@ impl Exchange for Contract {
         burn(lp_tokens);
         storage.lp_token_supply = total_liquidity - lp_tokens;
 
-        transfer(amount0, ~ContractId::from(token0), recipient);
-        transfer(amount1, ~ContractId::from(token1), recipient);
+        transfer(amount0, ContractId::from(token0), recipient);
+        transfer(amount1, ContractId::from(token1), recipient);
 
         store_reserves(
             current_token_0_amount - amount0,
@@ -270,13 +246,13 @@ impl Exchange for Contract {
         require(amount_0_out < token_0_reserve && amount_1_out < token_1_reserve, Error::InsufficentLiquidity);
 
         if (amount_0_out > 0) {
-            transfer(amount_0_out, ~ContractId::from(token0), recipient);
+            transfer(amount_0_out, ContractId::from(token0), recipient);
         }
         if (amount_1_out > 0) {
-            transfer(amount_1_out, ~ContractId::from(token1), recipient);
+            transfer(amount_1_out, ContractId::from(token1), recipient);
         }
-        let balance_0 = this_balance(~ContractId::from(token0));
-        let balance_1 = this_balance(~ContractId::from(token1));
+        let balance_0 = this_balance(ContractId::from(token0));
+        let balance_1 = this_balance(ContractId::from(token1));
 
         let amount0_in = if balance_0 > token_0_reserve - amount_0_out {
             balance_0 - (token_0_reserve - amount_0_out)
@@ -290,11 +266,11 @@ impl Exchange for Contract {
             };
         require(amount0_in > 0 || amount1_in > 0, Error::InsufficentInput);
 
-        let balance0_adjusted = ~U128::from(0, balance_0) * ~U128::from(0, 1000) - (~U128::from(0, amount0_in) * ~U128::from(0, 3));
-        let balance1_adjusted = ~U128::from(0, balance_1) * ~U128::from(0, 1000) - (~U128::from(0, amount1_in) * ~U128::from(0, 3));
+        let balance0_adjusted = U128::from(0, balance_0) * U128::from(0, 1000) - (U128::from(0, amount0_in) * U128::from(0, 3));
+        let balance1_adjusted = U128::from(0, balance_1) * U128::from(0, 1000) - (U128::from(0, amount1_in) * U128::from(0, 3));
 
         let left = balance0_adjusted * balance1_adjusted;
-        let right = ~U128::from(0, token_0_reserve) * ~U128::from(0, token_1_reserve) * ~U128::from(0, 1000 * 1000);
+        let right = U128::from(0, token_0_reserve) * U128::from(0, token_1_reserve) * U128::from(0, 1000 * 1000);
         require(left > right || left == right, Error::Invariant); // U128 doesn't have >= yet
 
         store_reserves(
@@ -314,8 +290,8 @@ impl Exchange for Contract {
             // initialized, but not yet used
             // storage.twap_buffer.insert(i, Observation {
             //     timestamp: 1,
-            //     price0CumulativeLast: ~U128::max(),
-            //     price1CumulativeLast: ~U128::max(),
+            //     price0CumulativeLast: U128::max(),
+            //     price1CumulativeLast: U128::max(),
             // });
             i += 1;
         }

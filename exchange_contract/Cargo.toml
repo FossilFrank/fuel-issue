@@ -1,17 +1,14 @@
 [package]
-authors = ["Fuel Labs <contact@fuel.sh>"]
-edition = "2021"
-license = "Apache-2.0"
 name = "tests"
-version = "0.0.0"
+description = "A cargo-generate template for Rust + Sway integration testing."
+version = "0.1.0"
+edition = "2021"
+authors = ["author"]
+license = "Apache-2.0"
 
-[dependencies]
-fuel-gql-client = { version = "0.6", default-features = false }
-fuel-tx = "0.12.1"
-fuels = "0.25.1"
-
-rand = "0.8"
-tokio = { version = "1.15", features = ["rt", "macros"] }
+[dev-dependencies]
+fuels = { version = "0.27", features = ["fuel-core-lib"] }
+tokio = { version = "1.12", features = ["rt", "macros"] }
 
 [[test]]
 harness = true
